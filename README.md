@@ -1,7 +1,7 @@
 # End-to-end Negotiation Network in Tensorflow
 
-This based on Facebook's paper (Deal or No Deal? End-to-End Learning
-for Negotiation Dialogues)[https://arxiv.org/abs/1706.05125].  I have
+This based on Facebook's paper [Deal or No Deal? End-to-End Learning
+for Negotiation Dialogues](https://arxiv.org/abs/1706.05125).  I have
 implemented the basic process for training and interactive chat using
 the Tensorflow contrib.seq2seq Decoder framework.
 
@@ -12,8 +12,8 @@ the Tensorflow contrib.seq2seq Decoder framework.
 The following are examples of how to use the applications. Get full help with
 `--help` option on any of the programs.
 
-The original dataset was provided by Facebook (end-to-end-negotiator)
-[https://github.com/facebookresearch/end-to-end-negotiator/tree/master/src/data/negotiate].
+The original dataset was provided by Facebook [end-to-end-negotiator]
+(https://github.com/facebookresearch/end-to-end-negotiator/tree/master/src/data/negotiate).
 To transform input data into tensorflow Example format, an example:
 
     python process_input.py --input=data/train.txt --model_dir=data
