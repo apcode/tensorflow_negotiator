@@ -1,8 +1,9 @@
-# Negotiation Network in Tensorflow
+# End-to-end Negotiation Network in Tensorflow
 
-This based on the paper [ref]().  I have implemented the main basic
-process for training and interactive chat using the Tensorflow Decoder
-OO framework.
+This based on Facebook's paper (Deal or No Deal? End-to-End Learning
+for Negotiation Dialogues)[https://arxiv.org/abs/1706.05125].  I have
+implemented the basic process for training and interactive chat using
+the Tensorflow contrib.seq2seq Decoder framework.
 
 << Still WIP >>
 
@@ -15,30 +16,39 @@ The original dataset was provided by Facebook (end-to-end-negotiator)
 [https://github.com/facebookresearch/end-to-end-negotiator/tree/master/src/data/negotiate].
 To transform input data into tensorflow Example format, an example:
 
-    process_input.py --input=./data/negotiations.txt --model*dir=.
+    python process_input.py --input=data/train.txt --model_dir=data
 
 To pretrain the model on predicting words only:
 
-    nogotiator.py \
+    python negotiator.py \
       --pretrain \
-      --train_records=./data/negotiations.tfrecords \
-      --vocab_file=./data/vocab.txt \
-      --vocab_size=N \
-      --model_dir=model \
+      --train_records=data/train.txt.tfrecords \
+      --vocab_file=data/train.txt.vocab \
+      --output_vocab=data/train.txt.outputs \
+      --embedding_dimension=100 \
+      --num_oov_vocab_buckets=10 \
+      --model_dir=data/model \
+      --learning_rate=0.01 \
+      --batch_size=128 \
+      --train_steps=1000 \
 
 To train the model on goals:
 
-    nogotiator.py \
+    python negotiator.py \
       --train_goals \
-      --train_records=./data/negotiations.tfrecords \
-      --vocab_file=./data/vocab.txt \
-      --vocab_size=N \
-      --model_dir=model \
+      --train_records=data/train.txt.tfrecords \
+      --vocab_file=data/train.txt.vocab \
+      --output_vocab=data/train.txt.outputs \
+      --model_dir=data/model \
+      --learning_rate=0.01 \
+      --batch_size=128 \
+      --train_steps=1000
 
 To chat:
 
-    negotiator.py \
+    python negotiator.py \
       --chat \
-      --vocab_file=./data/vocab.txt \
-      --vocab_size=N \
-      --model_dir=model
+      --vocab_file=data/train.txt.vocab \
+      --output_vocab=data/train.txt.outputs \
+      --model_dir=data/model
+
