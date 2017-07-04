@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Negotiation Network in Tensorflow
 
 This based on the paper [ref]().  I have implemented the main basic
@@ -43,7 +42,3 @@ To chat:
       --vocab_file=./data/vocab.txt \
       --vocab_size=N \
       --model_dir=model
-=======
-# tensorflow_negotiator
-A Tensorflow implementation of Facebook's end-to-end negotiator
->>>>>>> 7de38244312492e28c3e93c0f2a528cb2d8f07a4
