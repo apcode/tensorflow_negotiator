@@ -67,9 +67,10 @@ def ProcessInputFile(infile, outfile, vocabfile, outtokfile):
 
 
 def main(_):
-    outfile = os.path.join(FLAGS.output_dir, FLAGS.input + ".tfrecords")
-    vocabfile = os.path.join(FLAGS.output_dir, FLAGS.input + ".vocab")
-    outtokfile = os.path.join(FLAGS.output_dir, FLAGS.input + ".outputs")
+    base_input = os.path.basename(FLAGS.input)
+    outfile = os.path.join(FLAGS.output_dir, base_input + ".tfrecords")
+    vocabfile = os.path.join(FLAGS.output_dir, base_input + ".vocab")
+    outtokfile = os.path.join(FLAGS.output_dir, base_input + ".outputs")
     ProcessInputFile(FLAGS.input, outfile, vocabfile, outtokfile)
 
 
