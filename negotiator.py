@@ -56,7 +56,7 @@ def InputFn(input_file,
             parse_spec = {
                 "input": tf.FixedLenFeature([6], dtype=tf.int64),
                 "dialogue": tf.VarLenFeature(dtype=tf.string),
-                "output": tf.FixedLenFeature([6], dtype=tf.string)
+                "output": tf.FixedLenFeature([6], dtype=tf.int64)
             }
             features = tf.parse_single_example(example, parse_spec)
             sequence_length = tf.shape(features["dialogue"])[0]
@@ -64,10 +64,6 @@ def InputFn(input_file,
             word_lookup_table = tf.contrib.lookup.index_table_from_file(
                 FLAGS.vocab_file, FLAGS.num_oov_vocab_buckets, FLAGS.vocab_size)
             features["dialogue"] = word_lookup_table.lookup(features["dialogue"])
-            output_size = len(open(FLAGS.output_vocab).readlines())
-            output_lookup_table = tf.contrib.lookup.index_table_from_file(
-                FLAGS.output_vocab, 0, output_size)
-            features["output"] = output_lookup_table.lookup(features["output"])
             if sequence_bucketing_boundaries:
                 _, batch_features = tf.contrib.training.bucket_by_sequence_length(
                     input_length=sequence_length,
@@ -87,7 +83,7 @@ def InputFn(input_file,
                     dynamic_pad=True)
             batch_features["dialogue"] = tf.sparse_tensor_to_dense(
                 batch_features["dialogue"], default_value=DEFAULT_CHAR)
-            batch_features["dialogue_out"] = batch_features["dialogue"][:, 1:]
+            batch_features["dialogue_next"] = batch_features["dialogue"][:, 1:]
             batch_features["dialogue"] = batch_features["dialogue"][:, :-1]
             word_embeddings = layers.embed_sequence(
                 batch_features["dialogue"], vocab_size=FLAGS.vocab_size,
@@ -99,7 +95,7 @@ def InputFn(input_file,
 
 
 def _TestInput():
-    train_input = InputFn(FLAGS.train_records, 2, "dialogue_out")
+    train_input = InputFn(FLAGS.train_records, 2, "dialogue_next")
     features, labels = train_input()
     with tf.Session() as sess:
         sess.run([tf.global_variables_initializer(), tf.tables_initializer()])

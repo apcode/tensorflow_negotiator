@@ -19,6 +19,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.seq2seq as seq2seq
 
+from helper import ContextTrainingHelper
 from negotiator import InputFn
 
 INPUT_FILE="./data/val.txt"
@@ -84,7 +85,7 @@ def decode(helper, scope, reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
         cell = tf.contrib.rnn.LSTMCell(num_units=5)
         out_cell = tf.contrib.rnn.OutputProjectionWrapper(
-            cell, 20, reuse=reuse)
+            cell, 2, reuse=reuse)
         decoder = seq2seq.BasicDecoder(
             cell=out_cell, helper=helper,
             initial_state=out_cell.zero_state(
@@ -96,22 +97,39 @@ def decode(helper, scope, reuse=None):
 
 
 def TestBatchDecode():
-    examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 5)), dtype=np.float32)
-    print(examples.shape)
-    seq_length = tf.constant([7, 8], dtype=np.float32)
-    print(seq_length.shape)
-    outputs = tf.constant(np.random.randint(0, 5, size=(2, 1, 10)), dtype=np.float32)
-    print(outputs.shape)
-    training_helper = seq2seq.TrainingHelper(
-        outputs, seq_length)
+    examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 7)), dtype=np.float32)
+    seq_length = tf.constant([7, 8], dtype=np.int32)
+    outputs = tf.constant(np.random.randint(0, 5, size=(2, 10, 1)), dtype=np.float32)
+    context = tf.constant(np.random.randint(100, 105, size=(2, 5)), dtype=np.float32)
+    training_helper = ContextTrainingHelper(
+        inputs=examples,
+        context=context,
+        sequence_length=seq_length,
+        time_major=False)
     train_outputs = decode(training_helper, "decode")
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
-    sess.run(train_outputs)
-    
+    print(sess.run(train_outputs))
+
+def TestConcatContext():
+    examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 5)), dtype=np.float32)
+    print(examples.shape)
+    context = tf.constant(np.random.randint(0, 2, size=(5,)), dtype=np.float32)
+    context = tf.expand_dims(tf.expand_dims(context, 0), 0)
+    shp = tf.expand_dims(tf.shape(examples)[:-1], 0)
+    shp = tf.squeeze(tf.concat([shp, tf.constant(1, shape=[1,1])], -1))
+    print(context.shape)
+    print(shp.shape)
+    context = tf.tile(context, multiples=shp)
+    examples2 = tf.concat([examples, context], axis=-1)
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        print(sess.run([examples, context]))
+        print(sess.run(examples2))
 
 if __name__ == '__main__':
     #TestReadingFormat()
     #TestOutputVocab()
     #TestReadingTFRecords()
     TestBatchDecode()
+    #TestConcatContext()
