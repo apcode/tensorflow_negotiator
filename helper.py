@@ -26,7 +26,7 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
                name=None):
     """Initializer. 
     Setup input_tas to include context at each step.
-    Everything else in TrainingHelper will work correctly.
+    Everything else is implemented in TrainingHelper.
 
     Args:
       inputs: A (structure of) input tensors.
@@ -63,3 +63,30 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
             lambda inp: array_ops.zeros_like(inp[0, :]), inputs)
 
         self._batch_size = array_ops.size(sequence_length)
+
+
+class ContextGreedyEmbeddingHelper(GreedyEmbeddingHelper):
+
+    def __init__(self, embedding, context, start_tokens, end_token):
+        """Initializer.
+        Overrides embedding fn to concat the context vector each time.
+        
+        Args:
+          embedding: A callable that takes a vector tensor of `ids` (argmax ids),
+              or the `params` argument for `embedding_lookup`. The returned tensor
+              will be passed to the decoder input.
+          context: [batch_size, dim] tensor of context to append to input embedding.
+          start_tokens: `int32` vector shaped `[batch_size]`, the start tokens.
+          end_token: `int32` scalar, the token that marks end of decoding.
+
+        Raises:
+          ValueError: if `start_tokens` is not a 1D tensor or `end_token` is not a
+              scalar.
+        """
+        self._context = context
+        super(ContextGreedyEmbeddingHelper, self).__init__(
+            embedding, start_tokens, end_token)
+        # overwrite the embedding function
+        self._embedding_only_fn = self._embedding_fn
+        self._embedding_fn = lambda ids: tf.concat(
+            [self._embedding_only_fn, self._context], -1)
