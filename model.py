@@ -52,7 +52,7 @@ class Negotiator(tf.estimator.Estimator):
 
 
     def _pretrain_model_fn(self, features, labels, mode, params=None, config=None):
-        """Model fn for the estimator class to train purely on word predictions.
+        """Model fn for the estimator class to train purely on word probabilities.
 
         Follows requirements for tf.estimator.Estimators.
         - get embeddings used for input word ids. Used to generate embeddings
@@ -66,10 +66,6 @@ class Negotiator(tf.estimator.Estimator):
         train_outputs = self._decode(training_helper, "decode")
         with tf.variable_scope("embedding", reuse=True):
             embedding = tf.get_variable("embeddings")
-        # pred_helper = seq2seq.GreedyEmbeddingHelper(
-        #     embedding, start_tokens=None, end_token=None)
-        # pred_outputs = self._decode(pred_helper, "decode", reuse=True)
-        # tf.identity(train_outputs.sample_id[0], name='train_pred')
         weights = tf.sequence_mask(features["sequence_length"], dtype=tf.float32)
         labels = tf.reshape(labels, shape=(self.params["batch_size"], -1))
         loss = seq2seq.sequence_loss(
@@ -81,7 +77,6 @@ class Negotiator(tf.estimator.Estimator):
             optimizer=params.get('optimizer', 'Adam'),
             learning_rate=params.get('learning_rate', 0.001),
             summaries=['loss', 'learning_rate'])
-        # tf.identity(pred_outputs.sample_id[0], name='predictions')
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=None,  #pred_outputs.sample_id,

@@ -56,7 +56,7 @@ def InputFn(input_file,
             parse_spec = {
                 "input": tf.FixedLenFeature([6], dtype=tf.int64),
                 "dialogue": tf.VarLenFeature(dtype=tf.string),
-                "output": tf.FixedLenFeature([6], dtype=tf.int64)
+                "output": tf.FixedLenFeature([3], dtype=tf.int64)
             }
             features = tf.parse_single_example(example, parse_spec)
             sequence_length = tf.shape(features["dialogue"])[0]
@@ -120,7 +120,7 @@ def Train(output_dir):
         output_dir=output_dir,
         config=None,
         params=params)
-    train_input = InputFn(FLAGS.train_records, FLAGS.batch_size, "dialogue_out")
+    train_input = InputFn(FLAGS.train_records, FLAGS.batch_size, "dialogue_next")
     print("STARTING TRAIN")
     estimator.train(train_input, steps=FLAGS.train_steps, hooks=None)
     print("TRAIN COMPLETE")
