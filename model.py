@@ -80,7 +80,7 @@ class Negotiator(tf.estimator.Estimator):
             learning_rate=params.get('learning_rate', 0.001),
             summaries=['loss', 'learning_rate'])
         words = tf.argmax(logits)
-        run_hooks = [TrainingSampleHook(words, labels, self.vocab, every_steps=1)]
+        run_hooks = [TrainingSampleHook(words, labels, self.vocab, every_steps=1000)]
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=None,  #pred_outputs.sample_id,
