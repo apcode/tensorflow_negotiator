@@ -7,6 +7,17 @@ the Tensorflow contrib.seq2seq Decoder framework.
 
 << Still WIP >>
 
+## Implemented
+- pretraining on predicting words
+- pretraining including input context vector to each word
+
+## Still to do
+- predict outputs using attention layer over complete conversation
+- create loss combining word loss and output reward loss
+- rl training on combined loss
+- encode opponent words, generate your own
+- negotiation chatbot
+
 # Usage
 
 The following are examples of how to use the applications. Get full help with
