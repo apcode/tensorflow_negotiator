@@ -8,13 +8,12 @@ import tensorflow as tf
 import tensorflow.contrib.layers as layers
 import tensorflow.contrib.seq2seq as seq2seq
 
-
 from tensorflow.contrib.seq2seq import (
     BasicDecoder,
     dynamic_decode,
     GreedyEmbeddingHelper,
     TrainingHelper)
-
+from hooks import TrainingSampleHook
 
 class Negotiator(tf.estimator.Estimator):
 
@@ -68,8 +67,9 @@ class Negotiator(tf.estimator.Estimator):
             embedding = tf.get_variable("embeddings")
         weights = tf.sequence_mask(features["sequence_length"], dtype=tf.float32)
         labels = tf.reshape(labels, shape=(self.params["batch_size"], -1))
+        logits = train_outputs.rnn_output
         loss = seq2seq.sequence_loss(
-            logits=train_outputs.rnn_output,
+            logits=logits,
             targets=labels,
             weights=weights)
         train_op = layers.optimize_loss(
@@ -77,9 +77,11 @@ class Negotiator(tf.estimator.Estimator):
             optimizer=params.get('optimizer', 'Adam'),
             learning_rate=params.get('learning_rate', 0.001),
             summaries=['loss', 'learning_rate'])
+        words = tf.argmax(logits)
+        run_hooks = [TrainingSampleHook(words, labels, every_steps=1)]
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=None,  #pred_outputs.sample_id,
             loss=loss,
-            train_op=train_op
-        )
+            train_op=train_op,
+            training_hooks=run_hooks)
