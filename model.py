@@ -21,6 +21,8 @@ class Negotiator(tf.estimator.Estimator):
         """ Initialize the Estimator """
         if pretrain:
             model_fn = self._pretrain_model_fn
+        if "vocab_file" in params:
+            self.vocab = [w.strip() for w in open(params["vocab_file"])]
         super(Negotiator, self).__init__(
             model_fn=model_fn,
             model_dir=output_dir,
@@ -46,7 +48,7 @@ class Negotiator(tf.estimator.Estimator):
             outputs, _, _ = seq2seq.dynamic_decode(
                 decoder=decoder, output_time_major=False,
                 impute_finished=True,
-                maximum_iterations=None) #self.params["output_max_length"])
+                maximum_iterations=None)  #self.params["output_max_length"])
             return outputs
 
 
@@ -78,7 +80,7 @@ class Negotiator(tf.estimator.Estimator):
             learning_rate=params.get('learning_rate', 0.001),
             summaries=['loss', 'learning_rate'])
         words = tf.argmax(logits)
-        run_hooks = [TrainingSampleHook(words, labels, every_steps=1)]
+        run_hooks = [TrainingSampleHook(words, labels, self.vocab, every_steps=1)]
         return tf.estimator.EstimatorSpec(
             mode=mode,
             predictions=None,  #pred_outputs.sample_id,

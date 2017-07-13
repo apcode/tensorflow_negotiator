@@ -15,11 +15,12 @@ class TrainingSampleHook(tf.train.SessionRunHook):
     """Sample the targets and labels during training.
     Converts word ids to text.
     """
-    def __init__(self, outputs, targets,
+    def __init__(self, outputs, targets, vocab,
                  every_secs=None, every_steps=None):
         super(TrainingSampleHook, self).__init__()
         self.outputs = outputs
         self.targets = targets
+        self.vocab = vocab
         self.timer = SecondOrStepTimer(every_secs=every_secs,
                                        every_steps=every_steps)
         self.go = False
@@ -45,5 +46,12 @@ class TrainingSampleHook(tf.train.SessionRunHook):
         self.step = step
         if not self.go:
             return None
-        tf.logging.info(str(result_dict))
+        # Just get first conversation in batch
+        outputs = " ".join([self.vocab[wid]
+                            for wid in result_dict["outputs"][0]])
+        targets = " ".join([self.vocab[wid]
+                            for wid in result_dict["targets"][0]])
+        result = "TRAINING SAMPLE:\nTARGET(%d): %s\nOUTPUT(%d): %s" % (
+            len(targets), targets, len(outputs), outputs)
+        tf.logging.info(result)
         self.timer.update_last_triggered_step(self.step)

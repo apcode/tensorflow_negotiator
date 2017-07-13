@@ -109,6 +109,7 @@ def _TestInput():
 def Train(output_dir):
     params = {
         "num_units": 12,
+        "vocab_file": FLAGS.vocab_file,
         "vocab_size": FLAGS.vocab_size,
         "batch_size": FLAGS.batch_size,
         "output_max_length": 66,
