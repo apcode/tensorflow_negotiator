@@ -5,7 +5,7 @@ for Negotiation Dialogues](https://arxiv.org/abs/1706.05125).  I have
 implemented the basic process for training and interactive chat using
 the Tensorflow contrib.seq2seq Decoder framework.
 
-<< Still WIP >>
+<< Still WIP - Currently not working >>
 
 ## Implemented
 - pretraining on predicting words
