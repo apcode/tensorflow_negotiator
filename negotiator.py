@@ -38,16 +38,21 @@ tf.flags.DEFINE_boolean("debug", False, "Log debug info")
 FLAGS = tf.flags.FLAGS
 
 DEFAULT_CHAR=5  # Hardcoded to "." right now.
+SEQUENCE_BUCKETS=[30, 50, 75, 100, 200]
 
 def InputFn(input_file,
             batch_size,
             output,
+            vocab_file,
+            num_oov_vocab_buckets,
+            embedding_dimension,
             sequence_bucketing_boundaries=None,
             num_epochs=None,
             num_threads=1):
     if num_epochs <= 0:
         num_epochs = None
     queue_capacity = max(100, batch_size * 4)
+    vocab_size = len(open(vocab_file).readlines())
     def input_fn():
         with tf.name_scope('input'):
             file_queue = tf.train.string_input_producer([input_file])
@@ -62,7 +67,7 @@ def InputFn(input_file,
             sequence_length = tf.shape(features["dialogue"])[0]
             features['sequence_length'] = sequence_length - 1
             word_lookup_table = tf.contrib.lookup.index_table_from_file(
-                FLAGS.vocab_file, FLAGS.num_oov_vocab_buckets, FLAGS.vocab_size)
+                vocab_file, num_oov_vocab_buckets, vocab_size)
             features["dialogue"] = word_lookup_table.lookup(features["dialogue"])
             if sequence_bucketing_boundaries:
                 _, batch_features = tf.contrib.training.bucket_by_sequence_length(
@@ -86,24 +91,12 @@ def InputFn(input_file,
             batch_features["dialogue_next"] = batch_features["dialogue"][:, 1:]
             batch_features["dialogue"] = batch_features["dialogue"][:, :-1]
             word_embeddings = layers.embed_sequence(
-                batch_features["dialogue"], vocab_size=FLAGS.vocab_size,
-                embed_dim=FLAGS.embedding_dimension, scope="embedding")
+                batch_features["dialogue"], vocab_size=vocab_size,
+                embed_dim=embedding_dimension, scope="embedding")
             batch_features["embedded_dialogue"] = word_embeddings
         labels = batch_features.pop(output)
         return batch_features, labels
     return input_fn            
-
-
-def _TestInput():
-    train_input = InputFn(FLAGS.train_records, 2, "dialogue_next")
-    features, labels = train_input()
-    with tf.Session() as sess:
-        sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        coord = tf.train.Coordinator()
-        threads = tf.train.start_queue_runners(coord=coord)
-        f, l = sess.run([features, labels])
-        coord.request_stop()
-        coord.join(threads)
 
 
 def Train(output_dir):
@@ -121,7 +114,10 @@ def Train(output_dir):
         output_dir=output_dir,
         config=None,
         params=params)
-    train_input = InputFn(FLAGS.train_records, FLAGS.batch_size, "dialogue_next")
+    train_input = InputFn(FLAGS.train_records, FLAGS.batch_size, "dialogue_next",
+                          FLAGS.vocab_file, FLAGS.num_oov_vocab_buckets,
+                          FLAGS.embedding_dimension,
+                          sequence_bucketing_boundaries=SEQUENCE_BUCKETS)
     print("STARTING TRAIN")
     estimator.train(train_input, steps=FLAGS.train_steps, hooks=None)
     print("TRAIN COMPLETE")

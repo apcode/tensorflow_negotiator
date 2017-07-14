@@ -65,7 +65,7 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
         self._batch_size = array_ops.size(sequence_length)
 
 
-class ContextGreedyEmbeddingHelper(GreedyEmbeddingHelper):
+class ContextGreedyEmbeddingHelper(seq2seq.GreedyEmbeddingHelper):
 
     def __init__(self, embedding, context, start_tokens, end_token):
         """Initializer.

@@ -47,8 +47,8 @@ class Negotiator(tf.estimator.Estimator):
                     dtype=tf.float32, batch_size=self.params["batch_size"]))
             outputs, _, _ = seq2seq.dynamic_decode(
                 decoder=decoder, output_time_major=False,
-                impute_finished=True,
-                maximum_iterations=None)  #self.params["output_max_length"])
+                impute_finished=False,
+                maximum_iterations=None)
             return outputs
 
 
@@ -68,7 +68,6 @@ class Negotiator(tf.estimator.Estimator):
         with tf.variable_scope("embedding", reuse=True):
             embedding = tf.get_variable("embeddings")
         weights = tf.sequence_mask(features["sequence_length"], dtype=tf.float32)
-        labels = tf.reshape(labels, shape=(self.params["batch_size"], -1))
         logits = train_outputs.rnn_output
         loss = seq2seq.sequence_loss(
             logits=logits,

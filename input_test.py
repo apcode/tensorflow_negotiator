@@ -24,6 +24,9 @@ from negotiator import InputFn
 
 INPUT_FILE="./data/val.txt"
 RECORD_FILE="./data/val.txt.tfrecords"
+VOCAB_FILE="./data/val.txt.vocab"
+VOCAB_SIZE=len(open(VOCAB_FILE).readlines())
+BATCH_SIZE=4
 
 def TestReadingFormat():
     with open(INPUT_FILE) as f:
@@ -74,6 +77,25 @@ def TestReadingTFRecords():
     print example
 
 
+def TestInputFn():
+    train_input = InputFn(RECORD_FILE, BATCH_SIZE, "dialogue_next",
+                          VOCAB_FILE, 10, 10)
+    features, labels = train_input()
+    with tf.Session() as sess:
+        sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        f, l = sess.run([features, labels])
+        for k, v in f.items():
+            print(k, v.shape)
+        print(l.shape)
+        print(f["dialogue"])
+        print(l)
+        print(f["sequence_length"])
+        coord.request_stop()
+        coord.join(threads)
+
+
 def decode(helper, scope, reuse=None):
     """Build the decoder graph using seq2seq.BasicDecoder and a Helper.
     Args:
@@ -85,31 +107,67 @@ def decode(helper, scope, reuse=None):
     with tf.variable_scope(scope, reuse=reuse):
         cell = tf.contrib.rnn.LSTMCell(num_units=5)
         out_cell = tf.contrib.rnn.OutputProjectionWrapper(
-            cell, 2, reuse=reuse)
+            cell, VOCAB_SIZE, reuse=reuse)
         decoder = seq2seq.BasicDecoder(
             cell=out_cell, helper=helper,
             initial_state=out_cell.zero_state(
-                dtype=tf.float32, batch_size=2))
+                dtype=tf.float32, batch_size=BATCH_SIZE))
         outputs = seq2seq.dynamic_decode(
             decoder=decoder, output_time_major=False,
-            impute_finished=True, maximum_iterations=10)
+            impute_finished=True, maximum_iterations=None)
         return outputs[0]
 
 
 def TestBatchDecode():
-    examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 7)), dtype=np.float32)
-    seq_length = tf.constant([7, 8], dtype=np.int32)
-    outputs = tf.constant(np.random.randint(0, 5, size=(2, 10, 1)), dtype=np.float32)
-    context = tf.constant(np.random.randint(100, 105, size=(2, 5)), dtype=np.float32)
-    training_helper = ContextTrainingHelper(
-        inputs=examples,
-        context=context,
-        sequence_length=seq_length,
+    train_input = InputFn(RECORD_FILE, BATCH_SIZE, "dialogue_next",
+                          VOCAB_FILE, 1, 20)
+    features, labels = train_input()
+    training_helper = seq2seq.TrainingHelper(
+        inputs=features["embedded_dialogue"],
+        sequence_length=features["sequence_length"],
         time_major=False)
     train_outputs = decode(training_helper, "decode")
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
-    print(sess.run(train_outputs))
+    with tf.Session() as sess:
+        sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        outputs = sess.run(train_outputs)
+        print(outputs.rnn_output.shape)
+        coord.request_stop()
+        coord.join(threads)
+
+
+def TestSequenceLoss():
+    train_input = InputFn(RECORD_FILE, BATCH_SIZE, "dialogue_next",
+                          VOCAB_FILE, 1, 20)
+    features, labels = train_input()
+    training_helper = seq2seq.TrainingHelper(
+        inputs=features["embedded_dialogue"],
+        sequence_length=features["sequence_length"],
+        time_major=False)
+    train_outputs = decode(training_helper, "decode")
+    logits = train_outputs.rnn_output
+    weights = tf.sequence_mask(features["sequence_length"], dtype=tf.float32)
+    with tf.Session() as sess:
+        sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
+        num_classes = tf.shape(logits)[2]
+        logits_flat = tf.reshape(logits, [-1, num_classes])
+        labels_flat = tf.reshape(labels, [-1])
+        weights_flat = tf.reshape(weights, [-1])
+        labels_flat = tf.to_float(labels_flat)
+        labels_flat *= weights_flat
+        weights, logits, labels = sess.run([weights_flat, logits_flat, labels_flat])
+        print(logits)
+        print(labels)
+        print(weights)
+        print(logits.shape)
+        print(labels.shape)
+        print(weights.shape)
+        coord.request_stop()
+        coord.join(threads)
+
 
 def TestConcatContext():
     examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 5)), dtype=np.float32)
@@ -131,5 +189,7 @@ if __name__ == '__main__':
     #TestReadingFormat()
     #TestOutputVocab()
     #TestReadingTFRecords()
-    TestBatchDecode()
+    #TestInputFn()
+    #TestBatchDecode()
+    TestSequenceLoss()
     #TestConcatContext()

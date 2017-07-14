@@ -5,17 +5,13 @@
 2. DONE. update training tf records
 3. DONE. add input to model as context input
 4. retrain
+
 5. add output classifier
    - with final state input
    - with full dialogue and attention
 6. add final output to loss
 7. add outputs to generative network
 8. retrain 
-
-## Training Data
-- DONE. Generate two examples for each negotiation: from perspective of each agent
-- DONE. Convert input to 6-vector of items and values
-- DONE. Convert output to 3-vector of counts of items to agents
 
 ## Model
 - DONE. encode agent input
