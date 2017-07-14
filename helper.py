@@ -42,15 +42,13 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
                         [inputs, context, sequence_length]):
         if isinstance(inputs, sparse_tensor.SparseTensor):
             inputs.dense_shape.set_shape([3])
-        # Map context vector to same shape as inputs to allow concat
-        context = tf.expand_dims(context, 1)
-        num_t = int(inputs.shape[1])
-        context = tf.tile(context, [1, num_t, 1])
-        # concat input embeddings and input context vector
+        context = tf.expand_dims(tf.expand_dims(context, 0), 0)
+        shape = tf.expand_dims(tf.shape(examples)[:-1], 0)
+        shape = tf.squeeze(tf.concat([shape, tf.constant(1, shape=[1,1])], -1))
+        context = tf.tile(context, multiples=shape)
         inputs = tf.concat([inputs, context], axis=-1)
         if not time_major:
             inputs = nest.map_structure(_transpose_batch_time, inputs)
-
         self._input_tas = nest.map_structure(_unstack_ta, inputs)
         self._sequence_length = ops.convert_to_tensor(
             sequence_length, name="sequence_length")

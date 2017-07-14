@@ -177,13 +177,15 @@ def TestConcatContext():
     shp = tf.expand_dims(tf.shape(examples)[:-1], 0)
     shp = tf.squeeze(tf.concat([shp, tf.constant(1, shape=[1,1])], -1))
     print(context.shape)
-    print(shp.shape)
+    print(shp)
     context = tf.tile(context, multiples=shp)
     examples2 = tf.concat([examples, context], axis=-1)
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         print(sess.run([examples, context]))
-        print(sess.run(examples2))
+        ex2 = sess.run(examples2)
+        print(ex2)
+        print(ex2.shape)
 
 if __name__ == '__main__':
     #TestReadingFormat()
@@ -191,5 +193,5 @@ if __name__ == '__main__':
     #TestReadingTFRecords()
     #TestInputFn()
     #TestBatchDecode()
-    TestSequenceLoss()
-    #TestConcatContext()
+    #TestSequenceLoss()
+    TestConcatContext()

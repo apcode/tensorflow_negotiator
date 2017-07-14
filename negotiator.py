@@ -73,7 +73,7 @@ def InputFn(input_file,
                 _, batch_features = tf.contrib.training.bucket_by_sequence_length(
                     input_length=sequence_length,
                     tensors=features,
-                    bucket_boundaries=sequence_bucket_boundaries,
+                    bucket_boundaries=sequence_bucketing_boundaries,
                     batch_size=batch_size,
                     num_threads=num_threads,
                     capacity=queue_capacity,
