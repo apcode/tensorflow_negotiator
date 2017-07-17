@@ -42,9 +42,11 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
                         [inputs, context, sequence_length]):
         if isinstance(inputs, sparse_tensor.SparseTensor):
             inputs.dense_shape.set_shape([3])
-        context = tf.expand_dims(tf.expand_dims(context, 0), 0)
-        shape = tf.expand_dims(tf.shape(examples)[:-1], 0)
-        shape = tf.squeeze(tf.concat([shape, tf.constant(1, shape=[1,1])], -1))
+        context = tf.expand_dims(context, 1)
+        shape = tf.shape(inputs)[1]
+        shape = tf.expand_dims(shape, 0)
+        shape = tf.concat([tf.constant([1]),
+                           tf.concat([shape, tf.constant([1])], -1)], 0)
         context = tf.tile(context, multiples=shape)
         inputs = tf.concat([inputs, context], axis=-1)
         if not time_major:
@@ -56,10 +58,8 @@ class ContextTrainingHelper(seq2seq.TrainingHelper):
             raise ValueError(
                 "Expected sequence_length to be a vector, but received shape: %s" %
                 self._sequence_length.get_shape())
-
         self._zero_inputs = nest.map_structure(
             lambda inp: array_ops.zeros_like(inp[0, :]), inputs)
-
         self._batch_size = array_ops.size(sequence_length)
 
 

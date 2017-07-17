@@ -13,6 +13,7 @@ from tensorflow.contrib.seq2seq import (
     dynamic_decode,
     GreedyEmbeddingHelper,
     TrainingHelper)
+from helper import ContextTrainingHelper
 from hooks import TrainingSampleHook
 
 class Negotiator(tf.estimator.Estimator):
@@ -60,13 +61,13 @@ class Negotiator(tf.estimator.Estimator):
           as next input, when not training, or encoding.
         - provides training op and a prediction op over entire sequences.
         """
-        training_helper = seq2seq.TrainingHelper(
+        transformed_input = tf.to_float(features["input"]) / tf.constant(10.0)
+        training_helper = ContextTrainingHelper(
             inputs=features["embedded_dialogue"],
+            context=transformed_input,
             sequence_length=features["sequence_length"],
             time_major=False)
         train_outputs = self._decode(training_helper, "decode")
-        with tf.variable_scope("embedding", reuse=True):
-            embedding = tf.get_variable("embeddings")
         weights = tf.sequence_mask(features["sequence_length"], dtype=tf.float32)
         logits = train_outputs.rnn_output
         loss = seq2seq.sequence_loss(

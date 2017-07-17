@@ -172,20 +172,21 @@ def TestSequenceLoss():
 def TestConcatContext():
     examples = tf.constant(np.random.randint(0, 5, size=(2, 10, 5)), dtype=np.float32)
     print(examples.shape)
-    context = tf.constant(np.random.randint(0, 2, size=(5,)), dtype=np.float32)
-    context = tf.expand_dims(tf.expand_dims(context, 0), 0)
-    shp = tf.expand_dims(tf.shape(examples)[:-1], 0)
-    shp = tf.squeeze(tf.concat([shp, tf.constant(1, shape=[1,1])], -1))
+    context = tf.constant(np.random.randint(0, 2, size=(2, 3)), dtype=np.float32)
+    context = tf.expand_dims(context, 1)
     print(context.shape)
-    print(shp)
+    shp = tf.shape(examples)[1]
+    shp = tf.expand_dims(shp, 0)
+    shp = tf.concat([tf.constant([1]), tf.concat([shp, tf.constant([1])], -1)], 0)
     context = tf.tile(context, multiples=shp)
+    print(context.shape)
     examples2 = tf.concat([examples, context], axis=-1)
+    print(examples2.shape)
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        print(sess.run([examples, context]))
-        ex2 = sess.run(examples2)
-        print(ex2)
-        print(ex2.shape)
+        print(sess.run(shp))
+        print(sess.run(context))
+        print(sess.run(examples2))
 
 if __name__ == '__main__':
     #TestReadingFormat()

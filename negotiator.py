@@ -108,7 +108,7 @@ def Train(output_dir):
         "output_max_length": 66,
         "learning_rate": FLAGS.learning_rate,
     }
-    print(params)
+    tf.logging.info(params)
     estimator = model.Negotiator(
         pretrain=True,
         output_dir=output_dir,
@@ -118,14 +118,15 @@ def Train(output_dir):
                           FLAGS.vocab_file, FLAGS.num_oov_vocab_buckets,
                           FLAGS.embedding_dimension,
                           sequence_bucketing_boundaries=SEQUENCE_BUCKETS)
-    print("STARTING TRAIN")
+    tf.logging.info("STARTING TRAIN")
     estimator.train(train_input, steps=FLAGS.train_steps, hooks=None)
-    print("TRAIN COMPLETE")
+    tf.logging.info("TRAIN COMPLETE")
 
 
 def main(_):
     if not FLAGS.vocab_size:
         FLAGS.vocab_size = len(open(FLAGS.vocab_file).readlines())
+        tf.logging.info("Vocab size found as %d", FLAGS.vocab_size)
     if FLAGS.pretrain:
         learn_runner.run(experiment_fn=ExperimentFn(pretrain=True),
                          output_dir=FLAGS.model_dir)
