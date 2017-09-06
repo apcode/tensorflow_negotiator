@@ -1,6 +1,6 @@
 # End-to-end Negotiation Network in Tensorflow
 
-This based on Facebook's paper [Deal or No Deal? End-to-End Learning
+This is based on Facebook's paper [Deal or No Deal? End-to-End Learning
 for Negotiation Dialogues](https://arxiv.org/abs/1706.05125).  I have
 implemented the basic process for training and interactive chat using
 the Tensorflow contrib.seq2seq Decoder framework.
